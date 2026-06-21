@@ -3,6 +3,7 @@
 
   const Gulsen = window.Gulsen = {};
   const STORAGE_KEY = "gulsen-knitting-engine-v1";
+  const BACK_NECK_MIGRATION_KEY = "gulsen-migration-back-neck-14-5";
   const SIZE_CODES = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
   const PIECE_LABELS = { front: "Front", back: "Back", sleeve: "Sleeve · make two" };
   const SYMBOLS = ["", "knit", "purl", "yo", "k2tog", "ssk", "C4F", "C4B", "no-stitch"];
@@ -156,7 +157,7 @@
         },
         shaping: {
           front: { openingInsetCm: 2, openingDepthCm: 20, openingBindOffWidthCm: 1.5, neckWidthCm: 18, neckDepthCm: 8, centerBindOffWidthCm: 12, shoulderEnabled: true, shoulderNarrowingCm: 3, shoulderSlopeDepthCm: 3 },
-          back: { openingInsetCm: 1, openingDepthCm: 20, openingBindOffWidthCm: 1, neckWidthCm: 18, neckDepthCm: 3, centerBindOffWidthCm: 15, shoulderEnabled: true, shoulderNarrowingCm: 2, shoulderSlopeDepthCm: 2 },
+          back: { openingInsetCm: 1, openingDepthCm: 20, openingBindOffWidthCm: 1, neckWidthCm: 18, neckDepthCm: 3, centerBindOffWidthCm: 14.5, shoulderEnabled: true, shoulderNarrowingCm: 2, shoulderSlopeDepthCm: 2 },
           sleeve: { cuffWidthCm: 19, increaseLengthCm: 40 }
         },
         branding: { accentColor: "#7c2938", fontPair: "editorial", coverImage: "", logoImage: "" },
@@ -242,7 +243,14 @@
         const saved = localStorage.getItem(STORAGE_KEY);
         if (!saved) return Defaults.createProject();
         const parsed = JSON.parse(saved);
-        return Validation.importPayload(parsed).length ? Defaults.createProject() : parsed;
+        if (Validation.importPayload(parsed).length) return Defaults.createProject();
+        if (!localStorage.getItem(BACK_NECK_MIGRATION_KEY) && parsed.shaping?.back?.centerBindOffWidthCm === 15) {
+          parsed.shaping.back.centerBindOffWidthCm = 14.5;
+          if (parsed.graded) parsed.graded.stale = true;
+          localStorage.setItem(BACK_NECK_MIGRATION_KEY, "1");
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+        }
+        return parsed;
       } catch (error) {
         Store.storageError = error.message;
         return Defaults.createProject();
