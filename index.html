@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Offline knitting grading and pattern document prototype">
+  <title>Gulsen Knitting Engine</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#workspace">Skip to editor</a>
+
+  <div class="desktop-gate" role="status">
+    <div>
+      <span class="brand-mark" aria-hidden="true">G</span>
+      <h1>A larger workspace is required</h1>
+      <p>Gulsen is designed for garment grading on desktop screens at least 1024px wide.</p>
+    </div>
+  </div>
+
+  <div class="app-shell">
+    <header class="app-header">
+      <a class="brand" href="#project" aria-label="Gulsen home">
+        <span class="brand-mark" aria-hidden="true">G</span>
+        <span><strong>Gulsen</strong><small>Knitting engine</small></span>
+      </a>
+      <div class="header-actions">
+        <div class="unit-switch" role="group" aria-label="Display unit">
+          <button type="button" data-unit="metric" aria-pressed="true">cm</button>
+          <button type="button" data-unit="imperial" aria-pressed="false">in</button>
+        </div>
+        <span id="save-status" class="save-status" role="status">Saved locally</span>
+        <button class="button button-quiet" type="button" id="import-button">Import</button>
+        <button class="button button-quiet" type="button" id="export-button">Export</button>
+        <button class="button button-primary" type="button" id="calculate-button">Calculate all sizes</button>
+        <input class="sr-only" type="file" id="import-input" accept="application/json,.json">
+      </div>
+    </header>
+
+    <div class="workspace-layout">
+      <aside class="section-nav" aria-label="Project sections">
+        <p class="eyebrow">Pattern builder</p>
+        <ol>
+          <li><a href="#project" data-section-link="project"><span>01</span> Project</a></li>
+          <li><a href="#gauge" data-section-link="gauge"><span>02</span> Gauge &amp; sizes</a></li>
+          <li><a href="#blueprint" data-section-link="blueprint"><span>03</span> Blueprint</a></li>
+          <li><a href="#charts" data-section-link="charts"><span>04</span> Charts</a></li>
+          <li><a href="#shaping" data-section-link="shaping"><span>05</span> Shaping</a></li>
+          <li><a href="#branding" data-section-link="branding"><span>06</span> Branding</a></li>
+          <li><a href="#results" data-section-link="results"><span>07</span> Results</a></li>
+          <li><a href="#preview" data-section-link="preview"><span>08</span> Pattern preview</a></li>
+        </ol>
+        <div class="project-state">
+          <span class="status-dot" id="project-state-dot"></span>
+          <div><strong id="project-state-label">Ready to grade</strong><small id="project-state-copy">Demo inputs loaded</small></div>
+        </div>
+        <button class="text-button danger" type="button" id="reset-button">Reset demo project</button>
+      </aside>
+
+      <main id="workspace" class="workspace" tabindex="-1">
+        <div id="error-summary" class="error-summary" role="alert" hidden></div>
+        <div id="live-status" class="sr-only" aria-live="polite"></div>
+
+        <section id="project" class="editor-section section-open" aria-labelledby="project-title">
+          <button class="section-heading" type="button" aria-expanded="true" aria-controls="project-body">
+            <span><small>01 / Foundation</small><strong id="project-title">Project</strong></span>
+            <span class="section-toggle" aria-hidden="true">−</span>
+          </button>
+          <div class="section-body" id="project-body">
+            <div class="section-intro">
+              <div><p class="eyebrow">Publication essentials</p><h2>Set the voice of the pattern.</h2></div>
+              <p>These details flow directly into the finished document. Construction is fixed to a bottom-up, seamed drop-shoulder sweater.</p>
+            </div>
+            <div id="project-fields" class="form-grid"></div>
+          </div>
+        </section>
+
+        <section id="gauge" class="editor-section section-open" aria-labelledby="gauge-title">
+          <button class="section-heading" type="button" aria-expanded="true" aria-controls="gauge-body">
+            <span><small>02 / Measurements</small><strong id="gauge-title">Gauge &amp; sizes</strong></span>
+            <span class="section-toggle" aria-hidden="true">−</span>
+          </button>
+          <div class="section-body" id="gauge-body">
+            <div class="section-intro">
+              <div><p class="eyebrow">Canonical metric values</p><h2>Nine sizes, one consistent foundation.</h2></div>
+              <p>Switch units at any time. Gulsen stores metric values internally to keep calculations deterministic.</p>
+            </div>
+            <div id="gauge-fields"></div>
+            <div class="table-wrap"><table class="data-table size-table" id="size-table"></table></div>
+          </div>
+        </section>
+
+        <section id="blueprint" class="editor-section section-open" aria-labelledby="blueprint-title">
+          <button class="section-heading" type="button" aria-expanded="true" aria-controls="blueprint-body">
+            <span><small>03 / Structure</small><strong id="blueprint-title">Garment blueprint</strong></span>
+            <span class="section-toggle" aria-hidden="true">−</span>
+          </button>
+          <div class="section-body" id="blueprint-body">
+            <div class="section-intro">
+              <div><p class="eyebrow">Static motifs + dynamic fabric</p><h2>Describe how each panel is built.</h2></div>
+              <p>Static blocks stay fixed across sizes. Dynamic blocks absorb the remaining width while respecting repeat constraints.</p>
+            </div>
+            <div id="blueprint-editor"></div>
+          </div>
+        </section>
+
+        <section id="charts" class="editor-section section-open" aria-labelledby="charts-title">
+          <button class="section-heading" type="button" aria-expanded="true" aria-controls="charts-body">
+            <span><small>04 / Motifs</small><strong id="charts-title">Chart editor</strong></span>
+            <span class="section-toggle" aria-hidden="true">−</span>
+          </button>
+          <div class="section-body" id="charts-body">
+            <div class="section-intro">
+              <div><p class="eyebrow">Monochrome stitch grid</p><h2>Map the repeat, cell by cell.</h2></div>
+              <p>Select a chart and click cells to cycle stitch symbols. Chart width follows its static block automatically.</p>
+            </div>
+            <div id="chart-editor"></div>
+          </div>
+        </section>
+
+        <section id="shaping" class="editor-section section-open" aria-labelledby="shaping-title">
+          <button class="section-heading" type="button" aria-expanded="true" aria-controls="shaping-body">
+            <span><small>05 / Form</small><strong id="shaping-title">Shaping</strong></span>
+            <span class="section-toggle" aria-hidden="true">−</span>
+          </button>
+          <div class="section-body" id="shaping-body">
+            <div class="section-intro">
+              <div><p class="eyebrow">Measurement-first controls</p><h2>Turn dimensions into even shaping.</h2></div>
+              <p>The engine converts these measurements to stitch events and distributes them across the available rows.</p>
+            </div>
+            <div id="shaping-editor"></div>
+          </div>
+        </section>
+
+        <section id="branding" class="editor-section section-open" aria-labelledby="branding-title">
+          <button class="section-heading" type="button" aria-expanded="true" aria-controls="branding-body">
+            <span><small>06 / Identity</small><strong id="branding-title">Branding</strong></span>
+            <span class="section-toggle" aria-hidden="true">−</span>
+          </button>
+          <div class="section-body" id="branding-body">
+            <div class="section-intro">
+              <div><p class="eyebrow">Document direction</p><h2>Make the pattern recognizably yours.</h2></div>
+              <p>Images are resized locally before saving. Nothing leaves this browser.</p>
+            </div>
+            <div id="branding-editor"></div>
+          </div>
+        </section>
+
+        <section id="results" class="editor-section section-open" aria-labelledby="results-title">
+          <button class="section-heading" type="button" aria-expanded="true" aria-controls="results-body">
+            <span><small>07 / Calculation</small><strong id="results-title">Grading results</strong></span>
+            <span class="section-toggle" aria-hidden="true">−</span>
+          </button>
+          <div class="section-body" id="results-body">
+            <div id="results-view"></div>
+          </div>
+        </section>
+
+        <section id="preview" class="editor-section section-open" aria-labelledby="preview-title">
+          <button class="section-heading" type="button" aria-expanded="true" aria-controls="preview-body">
+            <span><small>08 / Publication</small><strong id="preview-title">Pattern preview</strong></span>
+            <span class="section-toggle" aria-hidden="true">−</span>
+          </button>
+          <div class="section-body" id="preview-body">
+            <div id="preview-controls"></div>
+            <article id="print-document" class="print-document" aria-label="Printable pattern preview"></article>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <dialog id="confirm-dialog" class="confirm-dialog">
+    <form method="dialog">
+      <p class="eyebrow">Please confirm</p>
+      <h2 id="confirm-title">Continue?</h2>
+      <p id="confirm-copy"></p>
+      <div class="dialog-actions">
+        <button class="button button-quiet" value="cancel">Cancel</button>
+        <button class="button button-danger" id="confirm-accept" value="confirm">Confirm</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
